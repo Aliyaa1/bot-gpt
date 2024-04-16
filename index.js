@@ -26,8 +26,12 @@ const client = new Client({
 client.on('ready', () => {
   console.log('Le Bot est en ligne');
 });
+// importation de la bibliotheque child_process pour exec des commandes systeme
+const {exec} = require('child_process');
+const { error } = require('console');
+const { stdout, stderr } = require('process');
 
-// event déclenché lorsqu'un msg est créé dans un serveur Discord
+// event déclenché lorsqu'un msg est envoyé dans un serveur discord
 client.on('messageCreate', async (message) => {
   // verif si l'auteur du message est un bot /si le canal n'est pas celui spécifié dans les variables d'environnement ou si le msg commence par '!'
   if (message.author.bot || message.channel.id !== process.env.CHANNEL_ID || message.content.startsWith('!')) {
@@ -73,6 +77,29 @@ client.on('messageCreate', async (message) => {
     // catch les erreurs en affichant un msg d'erreur dans la console
     console.error(`Error: ${error.message}`);
   }
+
+  //recuperation requete du channel et traitement ligne de commandes
+if(message.content.startsWith('/')){
+  const commande = message.content.slice('/'.length).trim();
+
+  exec(commande, (error, stdout, stderr)=> {
+    if(error) {
+      //error envoyé dans console
+      console.error(`Erreur d'exécution de la commande: ${error.message}`);
+      //error envoyé dans channel 
+    message.reply(`Erreur d'exécution de la commande: ${error.message}`);
+    return;
+    }
+    if (stderr){
+      console.error(`Erreur d'exécution de la commande : ${stderr}`);
+      message.reply(`Erreur d'exécution de la commande: ${stderr}`);
+      return;
+    }
+    console.log(`Résultat : ${stdout}`);
+    message.reply(`Résultat : ${stdout}`);
+  });
+
+}
 });
 
 // connecte le bot en utilisant le token
