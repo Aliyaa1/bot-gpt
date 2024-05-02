@@ -4,6 +4,7 @@ require('dotenv').config();
 // importe les modules Discord.js/OpenAI
 const { Client, IntentsBitField } = require('discord.js');
 const OpenAI = require('openai');
+const {slashCommands} = require ('./commands.js')
 
 // crée une instance de l'API OpenAI en utilisant la clé d'API stockée dans les var d'environnement
 const openai = new OpenAI({
@@ -14,11 +15,11 @@ const openai = new OpenAI({
 const client = new Client({
   intents: [
     IntentsBitField.Flags.Guilds,
-    // IntentsBitField.Flags.Guilds: cette intention indique que le bot souhaite recevoir des événements liés aux serveurs (guilds) auxquels il est connecté. ca inclut des events tels que la création ou la suppression de serveurs
+    // cette intention indique que le bot souhaite recevoir des événements liés aux serveurs (guilds) auxquels il est connecté. ca inclut des events tels que la création ou la suppression de serveurs
     IntentsBitField.Flags.GuildMessages,
-    // cette intention indique que le bot souhaite recevoir des events liés aux msg dans les serveurs auxquels il est connecte. ca inclut des events tels que la réception de nouveaux msg, la modif de msg existant...
+    // cette intention indique que le bot souhaite recevoir des events liés aux msg dans les serveurs auxquels il est connecté. inclut des events tels que la réception de nouveaux msg, la modif de msg existant...
     IntentsBitField.Flags.MessageContent,
-    // cette intention indique que le bot souhaite accéder au contenu des msg. ca signifie qu'il souhaite recevoir des informations sur le texte contenu dans les msg,essentiel pour la fonctionnalité de réponse 
+    // cette intention indique que le bot souhaite accéder au contenu des msg. 
   ],
 });
 
@@ -77,29 +78,9 @@ client.on('messageCreate', async (message) => {
     // catch les erreurs en affichant un msg d'erreur dans la console
     console.error(`Error: ${error.message}`);
   }
-
-  //recuperation requete du channel et traitement ligne de commandes
-if(message.content.startsWith('/')){
-  const commande = message.content.slice('/'.length).trim();
-
-  exec(commande, (error, stdout, stderr)=> {
-    if(error) {
-      //error envoyé dans console
-      console.error(`Erreur d'exécution de la commande: ${error.message}`);
-      //error envoyé dans channel 
-    message.reply(`Erreur d'exécution de la commande: ${error.message}`);
-    return;
-    }
-    if (stderr){
-      console.error(`Erreur d'exécution de la commande : ${stderr}`);
-      message.reply(`Erreur d'exécution de la commande: ${stderr}`);
-      return;
-    }
-    console.log(`Résultat : ${stdout}`);
-    message.reply(`Résultat : ${stdout}`);
-  });
-
-}
+  if (message.content.startsWith('/')){
+    slashCommands(message);
+  }
 });
 
 // connecte le bot en utilisant le token
